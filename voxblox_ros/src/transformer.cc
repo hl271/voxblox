@@ -76,7 +76,7 @@ bool Transformer::lookupTransform(const std::string& from_frame,
                                   const ros::Time& timestamp,
                                   Transformation* transform) {
   CHECK_NOTNULL(transform);
-  if (use_tf_transforms_) {
+  if (use_tf_transforms_) { //true
     return lookupTransformTf(from_frame, to_frame, timestamp, transform);
   } else {
     return lookupTransformQueue(timestamp, transform);
@@ -102,6 +102,7 @@ bool Transformer::lookupTransformTf(const std::string& from_frame,
   // the future. Now we will just wait.
   if (!tf_listener_.canTransform(to_frame, from_frame_modified,
                                  time_to_lookup)) {
+    ROS_WARN("Cannot transform from frame POINTCLOUD to WORLD");
     return false;
   }
 

@@ -215,14 +215,17 @@ void TsdfServer::processPointCloudMessageAndInsert(
     const Transformation& T_G_C, const bool is_freespace_pointcloud) {
   // Convert the PCL pointcloud into our awesome format.
 
+  ROS_WARN("PROCESS POINTCLOUD MSG AND INSERT");
   // Horrible hack fix to fix color parsing colors in PCL.
   bool color_pointcloud = false;
   bool has_intensity = false;
   for (size_t d = 0; d < pointcloud_msg->fields.size(); ++d) {
     if (pointcloud_msg->fields[d].name == std::string("rgb")) {
+      ROS_INFO("COLORED POINTCLOUD!");
       pointcloud_msg->fields[d].datatype = sensor_msgs::PointField::FLOAT32;
       color_pointcloud = true;
     } else if (pointcloud_msg->fields[d].name == std::string("intensity")) {
+      ROS_INFO("INTENSITY POINTCLOUD");
       has_intensity = true;
     }
   }
@@ -284,10 +287,10 @@ void TsdfServer::processPointCloudMessageAndInsert(
     tf::transformKindrToTF(T_G_C.cast<double>(), &pose_tf_msg);
     tf::transformKindrToMsg(icp_corrected_transform_.cast<double>(),
                             &transform_msg.transform);
-    tf_broadcaster_.sendTransform(
+    tf_broadcaster_.sendTransform(  // tf: from frame world -> icp_corrected
         tf::StampedTransform(icp_tf_msg, pointcloud_msg->header.stamp,
                              world_frame_, icp_corrected_frame_));
-    tf_broadcaster_.sendTransform(
+    tf_broadcaster_.sendTransform( // tf: from frame icp_corrected -> pose_corrected
         tf::StampedTransform(pose_tf_msg, pointcloud_msg->header.stamp,
                              icp_corrected_frame_, pose_corrected_frame_));
 
@@ -326,6 +329,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
 bool TsdfServer::getNextPointcloudFromQueue(
     std::queue<sensor_msgs::PointCloud2::Ptr>* queue,
     sensor_msgs::PointCloud2::Ptr* pointcloud_msg, Transformation* T_G_C) {
+  ROS_WARN("GET NEXT POINTCLOUD FROM QUEUE");
   const size_t kMaxQueueSize = 10;
   if (queue->empty()) {
     return false;
@@ -334,6 +338,7 @@ bool TsdfServer::getNextPointcloudFromQueue(
   if (transformer_.lookupTransform((*pointcloud_msg)->header.frame_id,
                                    world_frame_,
                                    (*pointcloud_msg)->header.stamp, T_G_C)) {
+    ROS_INFO("TRANSFORMER LOOKUP TRANSFORM SUCCESFULLY");
     queue->pop();
     return true;
   } else {
@@ -374,11 +379,11 @@ void TsdfServer::insertPointcloud(
     return;
   }
 
-  if (publish_pointclouds_on_update_) {
+  if (publish_pointclouds_on_update_) { //default: false
     publishPointclouds();
   }
 
-  if (verbose_) {
+  if (verbose_) { // true
     ROS_INFO_STREAM("Timings: " << std::endl << timing::Timing::Print());
     ROS_INFO_STREAM(
         "Layer memory: " << tsdf_map_->getTsdfLayer().getMemorySize());

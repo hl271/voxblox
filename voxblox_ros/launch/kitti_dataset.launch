@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-15"?>
 <launch>
   <arg name="play_bag" default="true" />
-  <!-- <arg name="bag_file" default="/path/to/drive35.bag"/> -->
+  <arg name="bag_file" default="$(find voxblox_ros)/kitti.bag"/>
   <arg name="process_every_nth_frame" default="1" />
   <arg name="voxel_size" default="0.25" />
   <arg name="scale" default="0.25" />
@@ -13,7 +13,7 @@
   <node name="player" pkg="rosbag" type="play" output="screen" args=" -r 0.2 --clock $(arg bag_file)"  if="$(arg play_bag)"/>
 
    <!-- Run stereo_dense_reconstruction_node-->
-  <node ns="stereo_gray" name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" clear_params="true" output="screen">
+  <node unless="$(arg use_laser)" ns="stereo_gray" name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" clear_params="true" output="screen">
     <remap from="left/image_raw" to="/cam02/image_raw" />
     <remap from="left/camera_info" to="/cam02/camera_info" />
     <remap from="right/image_raw" to="/cam03/image_raw" />
@@ -42,7 +42,7 @@
     <param name="slice_level" value="1.0" />
     <param name="method" value="fast" />
     <param name="use_const_weight" value="true" />
-    <param name="mesh_filename" value="$(find voxblox_ros)/mesh_results/$(anon kitti).ply" />
+    <!-- <param name="mesh_filename" value="$(find voxblox_ros)/mesh_results/$(anon kitti).ply" /> -->
   </node>
-
+  
 </launch>
